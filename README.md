@@ -209,7 +209,7 @@ Validates the complete OTP security lifecycle:
 
 | Role | Email | Password | Access |
 |---|---|---|---|
-| **Administrator** | `admin@petpassport.internal` | `AdminSecurePass2026!` | Admin Portal & Owner Dashboard |
+| **Administrator** | `` | `` | Admin Portal & Owner Dashboard |
 | **New Pet Owner** | Click **"New Owner Demo"** or register with your email | *(Your Password)* | Owner Dashboard & Pet Passports |
 
 ---
