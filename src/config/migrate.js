@@ -17,6 +17,21 @@ async function runMigrations(pool) {
   }
 
   // 1. Users table
+  // Ensure user name and password columns match the User model
+await addColumnIfMissing('users', 'full_name', 'VARCHAR(120) NULL');
+await addColumnIfMissing('users', 'password_hash', 'VARCHAR(255) NULL');
+
+await pool.query(`
+  UPDATE users
+  SET full_name = name
+  WHERE full_name IS NULL
+`);
+
+await pool.query(`
+  UPDATE users
+  SET password_hash = password
+  WHERE password_hash IS NULL
+`);
   await addColumnIfMissing('users', 'role', "VARCHAR(30) NOT NULL DEFAULT 'OWNER'");
   await addColumnIfMissing('users', 'status', "VARCHAR(30) NOT NULL DEFAULT 'ACTIVE'");
   await addColumnIfMissing('users', 'suspensionReason', 'TEXT NULL');
