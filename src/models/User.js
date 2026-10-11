@@ -99,22 +99,31 @@ class User {
   }
 
   static async create(data) {
-    let hashedPassword = data.password || data.password_hash;
-    if (hashedPassword && !hashedPassword.startsWith('$2a$') && !hashedPassword.startsWith('$2b$')) {
-      const salt = await bcrypt.genSalt(10);
-      hashedPassword = await bcrypt.hash(hashedPassword, salt);
-    }
+      let hashedPassword = data.password || data.password_hash;
 
-    const email = (data.email || '').toLowerCase().trim();
-    const rows = await query(
+      if (
+        hashedPassword &&
+        !hashedPassword.startsWith('$2a$') &&
+        !hashedPassword.startsWith('$2b$')
+      ) {
+        const salt = await bcrypt.genSalt(10);
+        hashedPassword = await bcrypt.hash(hashedPassword, salt);
+      }
+
+      const email = (data.email || '').toLowerCase().trim();
+      const fullName = (data.name || data.full_name || '').trim();
+
+      const rows = await query(
       `INSERT INTO users (
-        full_name, email, password_hash, phone, role, status,
+        name, full_name, email, password, password_hash, phone, role, status,
         suspensionReason, suspendedAt, suspendedBy, verificationStatus, verificationNotes,
         is_email_verified, otp_hash, otp_expires_at, otp_attempts, otp_last_sent_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        data.name || data.full_name || '',
+        fullName,
+        fullName,
         email,
+        hashedPassword,
         hashedPassword,
         data.phone || '',
         data.role || 'OWNER',
@@ -133,7 +142,7 @@ class User {
     );
 
     return User.findById(rows.insertId);
-  }
+}
 
   static async findByIdAndUpdate(id, update, options = {}) {
     const user = await User.findById(id);
