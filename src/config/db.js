@@ -3,50 +3,60 @@ const mysql = require('mysql2/promise');
 let pool = null;
 
 async function connectDB() {
-  const host = process.env.MYSQL_HOST || 'localhost';
-  const port = parseInt(process.env.MYSQL_PORT, 10) || 3366;
-  const user = process.env.MYSQL_USER || 'root';
-  const password = process.env.MYSQL_PASSWORD || '';
-  const database = process.env.MYSQL_DATABASE || 'petcare_passport';
+  const host = process.env.MYSQL_HOST;
+  const port = Number(process.env.MYSQL_PORT);
+  const user = process.env.MYSQL_USER;
+  const password = process.env.MYSQL_PASSWORD;
+  const database = process.env.MYSQL_DATABASE;
+  const useSSL = process.env.MYSQL_SSL === 'true';
 
-  console.log(`[Database] Connecting to MySQL at ${host}:${port} as ${user}...`);
+  if (!host || !port || !user || !password || !database) {
+    throw new Error(
+      'Missing required MySQL environment variables. Check MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE.'
+    );
+  }
+
+  console.log(`[Database] Connecting to MySQL at ${host}:${port}...`);
 
   try {
-    // 1. Ensure database exists
-    const rootConn = await mysql.createConnection({
-      host,
-      port,
-      user,
-      password,
-    });
-    await rootConn.query(`CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
-    await rootConn.end();
-
-    // 2. Create connection pool
     pool = mysql.createPool({
       host,
       port,
       user,
       password,
       database,
+      ...(useSSL
+        ? {
+            ssl: {
+              rejectUnauthorized: true
+            }
+          }
+        : {}),
       waitForConnections: true,
-      connectionLimit: 15,
+      connectionLimit: 10,
       queueLimit: 0,
       enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
+      keepAliveInitialDelay: 0
     });
 
-    // 3. Test connection
-    const [rows] = await pool.query('SELECT 1 AS connected');
-    console.log(`[Database] MySQL Connected successfully! Database: ${database}`);
+    await pool.query('SELECT 1 AS connected');
 
-    // 4. Initialize schema / tables
+    console.log('[Database] MySQL connection successful.');
+
     await initTables();
+
     const { runMigrations } = require('./migrate');
     await runMigrations(pool);
 
+    console.log('[Database] Table initialization and migrations completed.');
+
     return { type: 'mysql', host, port, database };
   } catch (err) {
+    if (pool) {
+      await pool.end().catch(() => {});
+      pool = null;
+    }
+
     console.error(`[Database Critical] MySQL connection failed: ${err.message}`);
     throw err;
   }
@@ -207,7 +217,9 @@ async function initTables() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
-  console.log('[Database] All SQL tables (users, pets, health_records, found_reports, notifications, audit_logs) verified.');
+  console.log(
+  '[Database] All SQL tables (users, pets, health_records, found_pet_reports, notifications, audit_logs) verified.'
+);
 }
 
 async function query(sql, params = []) {
