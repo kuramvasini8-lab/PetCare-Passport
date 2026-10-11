@@ -148,7 +148,7 @@ async function initTables() {
 
   // FOUND REPORTS Table
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS found_reports (
+    CREATE TABLE IF NOT EXISTS found_pet_reports (
       id INT AUTO_INCREMENT PRIMARY KEY,
       pet INT NOT NULL,
       publicCode VARCHAR(50) NOT NULL,
