@@ -1,0 +1,38 @@
+{
+  "name": "petcare-passport",
+  "version": "1.0.0",
+  "description": "AI-Powered Pet Healthcare Management, Digital Identity, QR Emergency Identification and Lost-Pet Recovery Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node scripts/e2e-test.js"
+  },
+  "keywords": [
+    "petcare",
+    "passport",
+    "qr-code",
+    "healthcare",
+    "lost-pet-recovery",
+    "gemini-ai"
+  ],
+  "author": "PetCare Passport Team",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.0",
+    "jpeg-js": "^0.4.4",
+    "jsonwebtoken": "^9.0.3",
+    "jsqr": "^1.4.0",
+    "mongodb-memory-server": "^11.0.1",
+    "mongoose": "^9.3.3",
+    "multer": "^2.0.2",
+    "mysql2": "^3.24.5",
+    "nodemailer": "^10.1.0",
+    "qrcode": "^1.5.4"
+  }
+}

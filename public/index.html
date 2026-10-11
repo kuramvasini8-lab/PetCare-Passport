@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PetCare Passport — AI Pet Healthcare, Digital Identity & Lost-Pet Recovery</title>
+  <meta name="description" content="A calm, comprehensive digital passport for your pets. Manage vaccinations, veterinary notes with AI, emergency QR identification, and community lost-pet recovery.">
+  
+  <!-- Modern Inter Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       MAIN APPLICATION NAVBAR
+       ========================================================================= -->
+  <header class="app-navbar" id="appNavbar">
+    <div class="nav-container">
+      <div class="brand" id="brandLogo" onclick="router.navigate('#dashboard')">
+        <div class="brand-icon">
+          <i data-lucide="shield-check" style="width:24px;height:24px;"></i>
+        </div>
+        <div class="brand-text">
+          <h1>PetCare Passport</h1>
+          <span id="brandSubtitle">Digital Pet Health &amp; Emergency ID</span>
+        </div>
+      </div>
+
+      <!-- Navigation links (Switched based on role / portal) -->
+      <nav id="navMenu">
+        <!-- Owner Nav Links -->
+        <ul class="nav-links" id="ownerNavLinks">
+          <li class="nav-item active" data-route="#dashboard" onclick="router.navigate('#dashboard')">
+            <i data-lucide="layout-dashboard" style="width:17px;height:17px;"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item" data-route="#pets" onclick="router.navigate('#pets')">
+            <i data-lucide="paw-print" style="width:17px;height:17px;"></i>
+            <span>My Pets</span>
+          </li>
+          <li class="nav-item" data-route="#health" onclick="router.navigate('#health')">
+            <i data-lucide="activity" style="width:17px;height:17px;"></i>
+            <span>Health &amp; Vaccines</span>
+          </li>
+          <li class="nav-item" data-route="#lost-center" onclick="router.navigate('#lost-center')">
+            <i data-lucide="map-pin" style="width:17px;height:17px;"></i>
+            <span>Sighting Reports</span>
+          </li>
+          <li class="nav-item" data-route="#ai-assistant" onclick="router.navigate('#ai-assistant')">
+            <i data-lucide="sparkles" style="width:17px;height:17px;"></i>
+            <span>AI Assistant</span>
+          </li>
+        </ul>
+
+        <!-- Admin Nav Links (Visible only to ADMIN role) -->
+        <ul class="nav-links" id="adminNavLinks" style="display: none;">
+          <li class="nav-item" data-route="#admin-overview" onclick="router.navigate('#admin-overview')">
+            <i data-lucide="shield" style="width:17px;height:17px;"></i>
+            <span>Overview</span>
+          </li>
+          <li class="nav-item" data-route="#admin-users" onclick="router.navigate('#admin-users')">
+            <i data-lucide="users" style="width:17px;height:17px;"></i>
+            <span>Users</span>
+          </li>
+          <li class="nav-item" data-route="#admin-reports" onclick="router.navigate('#admin-reports')">
+            <i data-lucide="alert-triangle" style="width:17px;height:17px;"></i>
+            <span>Sightings Moderation</span>
+          </li>
+          <li class="nav-item" data-route="#admin-pets" onclick="router.navigate('#admin-pets')">
+            <i data-lucide="eye" style="width:17px;height:17px;"></i>
+            <span>Pet Oversight</span>
+          </li>
+          <li class="nav-item" data-route="#admin-analytics" onclick="router.navigate('#admin-analytics')">
+            <i data-lucide="bar-chart-2" style="width:17px;height:17px;"></i>
+            <span>Analytics</span>
+          </li>
+          <li class="nav-item" data-route="#admin-audit" onclick="router.navigate('#admin-audit')">
+            <i data-lucide="file-text" style="width:17px;height:17px;"></i>
+            <span>Audit Logs</span>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Nav User Action Controls -->
+      <div class="nav-actions" id="navActions">
+        <!-- Notification Bell -->
+        <button class="btn btn-secondary btn-icon" id="btnNotification" onclick="toggleNotifications(event)" title="Notifications" style="position:relative;">
+          <i data-lucide="bell" style="width:18px;height:18px;"></i>
+          <span class="badge-counter badge-alert" id="unreadNotifBadge" style="position:absolute; top:-4px; right:-4px; display:none;">0</span>
+        </button>
+
+        <!-- Admin Portal Switcher (Shown if admin) -->
+        <button class="btn btn-sm btn-secondary" id="btnAdminSwitch" style="display:none;" onclick="toggleAdminOwnerMode()">
+          <i data-lucide="shield" style="width:15px;height:15px;"></i>
+          <span id="adminSwitchText">Admin Portal</span>
+        </button>
+
+        <!-- Auth state button -->
+        <div id="authProfileContainer">
+          <button class="btn btn-primary btn-sm" id="btnSignIn" onclick="openAuthModal()">Sign In</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       NOTIFICATIONS FLYOUT PANEL
+       ========================================================================= -->
+  <div id="notificationsFlyout" class="card" onclick="event.stopPropagation()" style="display:none; position:fixed; top:76px; right:24px; width:390px; max-width:calc(100vw - 32px); max-height:540px; z-index:1000; box-shadow:var(--shadow-lg); overflow:hidden; padding:0; border:1px solid var(--border-color); border-radius:var(--radius-lg);">
+    <div style="padding:14px 18px; background:var(--bg-secondary); border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h4 style="font-size:0.95rem; font-weight:700; margin:0;">Notifications</h4>
+        <span id="flyoutUnreadBadge" style="background:var(--terracotta); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 7px; border-radius:10px; display:none;">0</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button class="btn btn-sm btn-secondary" onclick="triggerTestNotification()" title="Send test notification to verify reception" style="padding:4px 8px; font-size:0.75rem;">
+          <i data-lucide="bell" style="width:12px;height:12px;"></i> Test
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="markAllNotificationsRead()" style="padding:4px 8px; font-size:0.75rem;">Mark Read</button>
+        <button class="btn btn-icon btn-sm btn-secondary" onclick="toggleNotifications(event)" title="Close notifications" style="padding:4px; margin-left:2px;">
+          <i data-lucide="x" style="width:14px;height:14px;"></i>
+        </button>
+      </div>
+    </div>
+    <div id="notificationsList" style="max-height:360px; overflow-y:auto; padding:10px 14px;">
+      <!-- Dynamic notification items -->
+    </div>
+    <div style="padding:10px 14px; background:var(--bg-secondary); border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.75rem; color:var(--text-muted);"><i data-lucide="radio" style="width:12px;height:12px;display:inline-block;vertical-align:middle;color:var(--sage-dark);"></i> Polling live every 3.5s</span>
+      <button class="btn btn-sm btn-secondary" onclick="requestDesktopNotifications()" style="padding:3px 7px; font-size:0.72rem;">Desktop Alerts</button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MAIN ROUTER VIEW CONTENT CONTAINER
+       ========================================================================= -->
+  <main class="main-content" id="appRoot">
+    <!-- Views dynamically loaded by router -->
+  </main>
+
+  <!-- =========================================================================
+       MODALS
+       ========================================================================= -->
+
+  <!-- AUTH MODAL (Sign In / Register / Bootstrap Info) -->
+  <div class="modal-backdrop" id="modalAuth">
+    <div class="modal-dialog" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 id="authModalTitle">Sign In to PetCare Passport</h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalAuth')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Switch tabs -->
+        <div style="display:flex; background:var(--bg-secondary); border-radius:var(--radius-pill); padding:4px; margin-bottom:20px;">
+          <button class="btn btn-sm" id="authTabSignIn" style="flex:1; border-radius:var(--radius-pill); background:var(--gold-primary); color:#2A2416;" onclick="switchAuthTab('login')">Sign In</button>
+          <button class="btn btn-sm" id="authTabRegister" style="flex:1; border-radius:var(--radius-pill); background:transparent;" onclick="switchAuthTab('register')">Register Owner</button>
+        </div>
+
+        <form id="authForm" onsubmit="handleAuthSubmit(event)">
+          <div class="form-group" id="groupAuthName" style="display:none;">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="authName" placeholder="e.g. Jordan Cooper">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="authEmail" placeholder="e.g. owner@petcare.demo" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="authPassword" placeholder="••••••••" required>
+          </div>
+          <div class="form-group" id="groupAuthPhone" style="display:none;">
+            <label class="form-label">Contact Phone (Optional)</label>
+            <input type="text" class="form-control" id="authPhone" placeholder="+1 (555) 019-2834">
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btnAuthSubmit" style="width:100%; margin-top:10px;">
+            <i data-lucide="log-in" style="width:16px;height:16px;"></i>
+            <span>Sign In</span>
+          </button>
+        </form>
+
+        <div style="margin-top:20px; padding-top:16px; border-top:1px dashed var(--border-color); font-size:0.82rem; color:var(--text-secondary); text-align:center;">
+          <p><strong>Demo Quick Access:</strong></p>
+          <div style="display:flex; gap:8px; justify-content:center; margin-top:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="quickFillAdmin()">Admin Demo</button>
+            <button class="btn btn-secondary btn-sm" onclick="quickRegisterDemoOwner()">New Owner Demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMAIL OTP VERIFICATION MODAL -->
+  <div class="modal-backdrop" id="modalOtpVerify">
+    <div class="modal-dialog" style="max-width: 460px; text-align: center;">
+      <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">🐾</span>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin: 0;">Pet Parent Verification</h3>
+        </div>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalOtpVerify')" title="Close"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body" style="padding-top: 10px;">
+        <!-- Pet Badge Icon -->
+        <div style="width: 68px; height: 68px; margin: 0 auto 16px; background: linear-gradient(135deg, var(--gold-light), #F0E2C8); border: 2px solid var(--gold-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(212,163,115,0.22);">
+          <i data-lucide="mail-check" style="width: 32px; height: 32px; color: var(--gold-dark);"></i>
+        </div>
+
+        <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Check Your Inbox</h3>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px;">
+          We sent a 6-digit verification code to<br>
+          <strong id="otpTargetEmail" style="color: var(--gold-dark); word-break: break-all; font-weight: 700;">user@example.com</strong>
+        </p>
+
+        <!-- Dynamic Status Message Container -->
+        <div id="otpAlertBox" style="display: none;"></div>
+
+        <!-- 6-digit segmented inputs -->
+        <form id="otpVerifyForm" onsubmit="handleOtpSubmit(event)">
+          <div class="otp-inputs-container" id="otpInputsGroup">
+            <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" class="otp-digit-input" id="otpDigit0" data-index="0" autocomplete="off" autofocus>
+            <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" class="otp-digit-input" id="otpDigit1" data-index="1" autocomplete="off">
+            <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" class="otp-digit-input" id="otpDigit2" data-index="2" autocomplete="off">
+            <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" class="otp-digit-input" id="otpDigit3" data-index="3" autocomplete="off">
+            <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" class="otp-digit-input" id="otpDigit4" data-index="4" autocomplete="off">
+            <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" class="otp-digit-input" id="otpDigit5" data-index="5" autocomplete="off">
+          </div>
+
+          <!-- Expiry Timer Countdown -->
+          <div style="margin-bottom: 20px;">
+            <div class="otp-timer-badge" id="otpTimerBadge">
+              <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+              <span>Code expires in: <strong id="otpExpiryCountdown" style="font-variant-numeric: tabular-nums;">05:00</strong></span>
+            </div>
+          </div>
+
+          <!-- Verify Action Button -->
+          <button type="submit" class="btn btn-primary" id="btnVerifyOtp" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.95rem; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+            <span>Verify &amp; Continue</span>
+          </button>
+        </form>
+
+        <!-- Resend Section with Cooldown -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px dashed var(--border-color); font-size: 0.84rem;">
+          <span style="color: var(--text-secondary);">Didn't receive the email?</span>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnResendOtp" onclick="handleResendOtp()" style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="refresh-cw" style="width: 13px; height: 13px;" id="iconResendOtp"></i>
+            <span id="btnResendOtpText">Resend Code</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT PET MODAL -->
+  <div class="modal-backdrop" id="modalPet">
+    <div class="modal-dialog" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 id="petModalTitle">Register New Pet</h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalPet')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="petForm" onsubmit="handlePetSubmit(event)">
+          <input type="hidden" id="petEditId">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Pet Name *</label>
+              <input type="text" class="form-control" id="petName" required placeholder="e.g. Bruno">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Species *</label>
+              <select class="form-control" id="petSpecies" required>
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+                <option value="Bird">Bird</option>
+                <option value="Rabbit">Rabbit</option>
+                <option value="Horse">Horse</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Breed</label>
+              <input type="text" class="form-control" id="petBreed" placeholder="e.g. Golden Labrador Retriever">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Birth / Estimated</label>
+              <input type="date" class="form-control" id="petDob">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select class="form-control" id="petGender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Weight (kg)</label>
+              <input type="number" step="0.1" class="form-control" id="petWeight" placeholder="e.g. 31.5">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Microchip Number</label>
+              <input type="text" class="form-control" id="petMicrochip" placeholder="15-digit microchip code">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Group</label>
+              <input type="text" class="form-control" id="petBloodGroup" placeholder="e.g. DEA 1.1 Positive">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Photo (Upload file or Image URL)</label>
+            <div style="display:flex; gap:10px;">
+              <input type="file" class="form-control" id="petPhotoFile" accept="image/*" style="flex:1;">
+              <input type="url" class="form-control" id="petPhotoUrl" placeholder="Or paste image URL" style="flex:1;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Spayed / Neutered</label>
+            <label class="checkbox-toggle-wrap">
+              <input type="checkbox" id="petNeutered">
+              <span>This pet is spayed / neutered</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Known Allergies</label>
+            <input type="text" class="form-control" id="petAllergies" placeholder="e.g. Chicken protein allergy">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Existing Medical Conditions</label>
+            <input type="text" class="form-control" id="petConditions" placeholder="e.g. Seasonal grass allergies, arthritis">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Special Care &amp; Dietary Instructions</label>
+            <textarea class="form-control" id="petSpecialCare" rows="2" placeholder="e.g. Sensitive stomach; gentle walking only"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Emergency Phone (Owner)</label>
+              <input type="text" class="form-control" id="petEmergencyPhone" placeholder="+1 (555) 019-2834">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Emergency Email (Owner)</label>
+              <input type="email" class="form-control" id="petEmergencyEmail" placeholder="contact@example.com">
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding-left:0; padding-right:0; margin-bottom:-10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modalPet')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSavePet">Save Pet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT HEALTH RECORD MODAL -->
+  <div class="modal-backdrop" id="modalHealth">
+    <div class="modal-dialog" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="healthModalTitle">Add Health Record</h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalHealth')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="healthForm" onsubmit="handleHealthSubmit(event)">
+          <input type="hidden" id="healthEditId">
+
+          <div class="form-group">
+            <label class="form-label">Select Pet *</label>
+            <select class="form-control" id="healthPetSelect" required>
+              <!-- Filled dynamically -->
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category *</label>
+              <select class="form-control" id="healthCategory" onchange="adjustHealthFormCategory()" required>
+                <option value="VACCINATION">Vaccination</option>
+                <option value="VET_VISIT">Veterinary Visit</option>
+                <option value="MEDICATION">Medication</option>
+                <option value="ALLERGY">Allergy Record</option>
+                <option value="WEIGHT">Weight Measurement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Title / Vaccine Name *</label>
+              <input type="text" class="form-control" id="healthTitle" required placeholder="e.g. Rabies 3-Year Booster">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" id="lblHealthDate">Administered / Visit Date</label>
+              <input type="date" class="form-control" id="healthDate" required>
+            </div>
+            <div class="form-group" id="grpDueDate">
+              <label class="form-label">Next Due / Follow-up Date</label>
+              <input type="date" class="form-control" id="healthDueDate">
+            </div>
+          </div>
+
+          <div class="form-group" id="grpVetClinic">
+            <label class="form-label">Clinic / Veterinarian</label>
+            <input type="text" class="form-control" id="healthClinic" placeholder="e.g. Golden Valley Veterinary Hospital">
+          </div>
+
+          <div class="form-group" id="grpDosage" style="display:none;">
+            <label class="form-label">Dosage &amp; Vet Instructions</label>
+            <input type="text" class="form-control" id="healthDosage" placeholder="e.g. 1 tablet twice daily with food for 10 days">
+          </div>
+
+          <div class="form-group" id="grpWeightVal" style="display:none;">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" step="0.1" class="form-control" id="healthWeightVal" placeholder="e.g. 31.5">
+          </div>
+
+          <div class="form-group" id="grpCompletedCheck">
+            <label class="checkbox-toggle-wrap">
+              <input type="checkbox" id="healthIsCompleted">
+              <span>Mark as administered / completed</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Clinical Notes &amp; Observations</label>
+            <textarea class="form-control" id="healthNotes" rows="3" placeholder="Veterinary notes, observations, batch numbers, reaction details..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding-left:0; padding-right:0; margin-bottom:-10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modalHealth')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveHealth">Save Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOST MODE ACTIVATION MODAL -->
+  <div class="modal-backdrop" id="modalLostMode">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 style="color:var(--status-error); display:flex; align-items:center; gap:8px;">
+          <i data-lucide="alert-triangle" style="width:20px;height:20px;"></i>
+          <span>Activate Lost Pet Alert</span>
+        </h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalLostMode')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="lostPetId">
+        <div style="background:var(--terracotta-soft); border-left:4px solid var(--terracotta); padding:12px; border-radius:var(--radius-sm); margin-bottom:16px; font-size:0.86rem; color:var(--text-main);">
+          Activating Lost Mode highlights your pet across the emergency passport profile, informs any scanner that this pet is urgently missing, and unlocks instant community sighting notifications.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Seen Location *</label>
+          <input type="text" class="form-control" id="lostLocation" placeholder="e.g. Corner of Oak St and 5th Ave, near Central Park" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Approximate Date &amp; Time Missing</label>
+          <input type="datetime-local" class="form-control" id="lostDateTime">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Circumstances / Distinguishing Features</label>
+          <textarea class="form-control" id="lostCircumstances" rows="3" placeholder="e.g. Slipped collar during thunderstorm, wearing red harness, shy around loud cars..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding-left:0; padding-right:0; margin-bottom:-10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalLostMode')">Cancel</button>
+          <button type="button" class="btn btn-danger" onclick="confirmActivateLostMode()">
+            <i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Activate Lost Alert
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURE EMERGENCY PRIVACY MODAL -->
+  <div class="modal-backdrop" id="modalPrivacy">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>Emergency Privacy Settings</h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalPrivacy')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:16px;">
+          Control what information is visible to someone scanning this pet's QR code. Sensitive fields are strictly excluded on the backend unless approved.
+        </p>
+
+        <input type="hidden" id="privacyPetId">
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowPhoto" checked>
+          <div>
+            <strong>Show Pet Photograph</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Enables quick visual confirmation by finders</div>
+          </div>
+        </label>
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowNameBreed" checked>
+          <div>
+            <strong>Show Pet Name &amp; Breed</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Displays pet name and breed details</div>
+          </div>
+        </label>
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowMedical">
+          <div>
+            <strong>Show Medical Conditions</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Critical if pet has asthma, epilepsy, or diabetes</div>
+          </div>
+        </label>
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowAllergies" checked>
+          <div>
+            <strong>Show Allergies &amp; Dietary Restrictions</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Prevents finder from feeding harmful foods</div>
+          </div>
+        </label>
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowSpecialCare" checked>
+          <div>
+            <strong>Show Special Care &amp; Handling Tips</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Helps finders approach gently without startling pet</div>
+          </div>
+        </label>
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowPhone" checked>
+          <div>
+            <strong>Show Emergency Telephone Link</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Provides one-click calling for immediate reunion</div>
+          </div>
+        </label>
+
+        <label class="checkbox-toggle-wrap">
+          <input type="checkbox" id="privShowEmail">
+          <div>
+            <strong>Show Emergency Email Action</strong>
+            <div style="font-size:0.78rem; color:var(--text-secondary);">Allows finder to send written notification</div>
+          </div>
+        </label>
+
+        <div class="modal-footer" style="padding-left:0; padding-right:0; margin-bottom:-10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalPrivacy')">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="savePrivacyPreferences()">Save Privacy Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DIGITAL PASSPORT MODAL (with high contrast QR and Print) -->
+  <div class="modal-backdrop" id="modalPassport">
+    <div class="modal-dialog" style="max-width: 860px; max-height: 94vh;">
+      <div class="modal-header no-print">
+        <h3>Official Digital Pet Passport</h3>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn btn-primary btn-sm no-print" onclick="if(currentPassportData) viewEmergencyProfile(currentPassportData.publicLink, currentPassportData.publicCode)">
+            <i data-lucide="external-link" style="width:15px;height:15px;"></i>
+            <span>View Profile</span>
+          </button>
+          <button class="btn btn-secondary btn-sm no-print" onclick="if(currentPassportData) downloadQrAsJpg(currentPassportData.publicCode)">
+            <i data-lucide="download" style="width:15px;height:15px;"></i>
+            <span>Download QR (JPG)</span>
+          </button>
+          <button class="btn btn-secondary btn-sm no-print" onclick="printCurrentPassport()">
+            <i data-lucide="printer" style="width:15px;height:15px;"></i>
+            <span>Print Passport</span>
+          </button>
+          <button class="btn btn-secondary btn-icon no-print" onclick="closeModal('modalPassport')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <div id="passportPrintTarget">
+          <!-- Dynamically populated passport sheet -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN SUSPEND USER MODAL -->
+  <div class="modal-backdrop" id="modalAdminSuspend">
+    <div class="modal-dialog" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>Suspend User Account</h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modalAdminSuspend')"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="suspendUserId">
+        <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:14px;">
+          Suspending this account will immediately revoke backend access to all protected pet records and actions, even with an active token.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Suspension Justification / Reason *</label>
+          <textarea class="form-control" id="suspendReason" rows="3" placeholder="Violation of community terms, spam report, abusive content..." required></textarea>
+        </div>
+        <div class="modal-footer" style="padding-left:0; padding-right:0; margin-bottom:-10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalAdminSuspend')">Cancel</button>
+          <button type="button" class="btn btn-terracotta" onclick="confirmSuspendUser()">Confirm Suspension</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- App Logic Script -->
+  <script src="/js/app.js"></script>
+</body>
+</html>
